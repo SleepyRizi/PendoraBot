@@ -921,9 +921,11 @@ class AiogramLlmBot:
     async def on_load_voice_button(self, cbq, option: str):
         chat_id = cbq.message.chat.id
         user = self.users[chat_id]
-        male = Silero.voices[user.language]["male"]
+        # male = Silero.voices[user.language]["male"]
         female = Silero.voices[user.language]["female"]
-        voice_dict = ["None"] + male + female
+        # voice_dict = ["None"] + male + female
+        voice_dict = ["None"]  + female
+
         voice_num = int(option.replace(const.BTN_VOICE_LOAD, ""))
         user.silero_speaker = voice_dict[voice_num]
         user.silero_model_id = Silero.voices[user.language]["model"]
@@ -952,9 +954,10 @@ class AiogramLlmBot:
         shift = int(option.replace(const.BTN_VOICE_LIST, ""))
         #  create list
         user = self.users[chat_id]
-        male = list(map(lambda x: x + "🚹", Silero.voices[user.language]["male"]))
+        # male = list(map(lambda x: x + "🚹", Silero.voices[user.language]["male"]))
         female = list(map(lambda x: x + "🚺", Silero.voices[user.language]["female"]))
-        voice_dict = ["🔇None"] + male + female
+        # voice_dict = ["🔇None"] + male + female
+        voice_dict = ["🔇None"]  + female
         voice_buttons = self.get_switch_keyboard(
             opt_list=list(voice_dict),
             shift=shift,

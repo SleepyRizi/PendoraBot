@@ -47,28 +47,8 @@ class Silero:
     voices = {
         "en": {
             "model": "v3_en",
-            "male": [
-                "en_2",
-                "en_7",
-                "en_9",
-                "en_13",
-                "en_15",
-                "en_17",
-                "en_19",
-                "en_20",
-            ],
             "female": [
-                "en_0",
-                "en_10",
-                "en_11",
-                "en_12",
-                "en_14",
-                "en_16",
-                "en_18",
-                "en_24",
-                "en_25",
-                "en_82",
-                "en_85",
+                "Kaki",
             ],
         },
         "ru": {
@@ -103,7 +83,7 @@ class Silero:
         print("XTTS model loaded successfully.")
 
     @utils.async_wrap
-    def generate_audio(self, text: str, user_id: int, user: User):
+    def get_audio(self, text: str, user_id: int, user: User):
         try:
             print("Computing speaker latents...")
             gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(audio_path=[self.speaker_reference])
