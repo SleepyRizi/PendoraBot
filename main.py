@@ -17,6 +17,7 @@ from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMa
 from aiogram.dispatcher.dispatcher import Dispatcher
 from aiogram.types.input_file import InputFile
 from aiogram.types.input_media import InputMediaAudio
+import re
 
 import os
 import random
@@ -215,7 +216,7 @@ class AiogramLlmBot:
             chat_id=chat_id,
             text=send_text,
             reply_markup=self.get_initial_keyboard(chat_id, user),
-            parse_mode="HTML",
+            parse_mode=None,
         )
 
     async def start_send_typing_status(self, chat_id: int) -> Event:
@@ -272,20 +273,25 @@ class AiogramLlmBot:
         (urllib3.exceptions.HTTPError, urllib3.exceptions.ConnectTimeoutError),
         max_time=10,
     )
+    
     async def send_message(self, chat_id: int, text: str) -> Message:
         user = self.users[chat_id]
         text = await utils.prepare_text(text, user, "to_user")
+
+        # Clean up the message text by removing the unwanted tags and prefix
+        text = re.sub(r"<pre>|</pre>", "", text)  # Removing <pre> tags
+        text = re.sub(r"^\s*Pandora Kaki:\s*", "", text)  # Removing the 'Pandora Kaki:' prefix
 
         if user.silero_speaker == "None" or user.silero_model_id == "None":
             message = await self.bot.send_message(
                 text=text,
                 chat_id=chat_id,
-                parse_mode="HTML",
+                parse_mode=None,  # Ensure no HTML or Markdown is parsed
                 reply_markup=self.get_chat_keyboard(chat_id, True),
             )
         else:
             if ":" in text:
-                audio_text = ":".join(text.split(":")[1:])
+                audio_text = ":".join(text.split(":")[1:])  # Assuming ':' is used to split speaking parts
             else:
                 audio_text = text
             audio_path = await self.silero.get_audio(text=audio_text, user_id=chat_id, user=user)
@@ -294,14 +300,14 @@ class AiogramLlmBot:
                     chat_id=chat_id,
                     audio=InputFile(audio_path),
                     caption=text,
-                    parse_mode="HTML",
+                    parse_mode=None,  # Ensure no HTML or Markdown is parsed for the caption
                     reply_markup=self.get_chat_keyboard(chat_id, True),
                 )
             else:
                 message = await self.bot.send_message(
                     text=text,
                     chat_id=chat_id,
-                    parse_mode="HTML",
+                    parse_mode=None,  # Ensure no HTML or Markdown is parsed
                     reply_markup=self.get_chat_keyboard(chat_id, True),
                 )
         return message
@@ -324,7 +330,7 @@ class AiogramLlmBot:
             await self.bot.edit_message_text(
                 text=text,
                 chat_id=chat_id,
-                parse_mode="HTML",
+                parse_mode=None,
                 message_id=message_id,
                 reply_markup=self.get_chat_keyboard(chat_id),
             )
@@ -345,7 +351,7 @@ class AiogramLlmBot:
             await self.bot.edit_message_caption(
                 chat_id=chat_id,
                 caption=text,
-                parse_mode="HTML",
+                parse_mode=None,
                 message_id=message_id,
                 reply_markup=self.get_chat_keyboard(chat_id),
             )
@@ -364,7 +370,7 @@ class AiogramLlmBot:
             text=send_text,
             reply_to_message_id=None,
             reply_markup=self.get_initial_keyboard(chat_id, self.users[chat_id] if chat_id in self.users else None),
-            parse_mode="HTML",
+            parse_mode=None,
         )
 
     async def thread_get_message(self, message: types.Message):
@@ -528,7 +534,7 @@ class AiogramLlmBot:
             text=send_text,
             chat_id=chat_id,
             reply_markup=self.get_options_keyboard(chat_id, user),
-            parse_mode="HTML",
+            parse_mode=None,
         )
 
     async def on_delete_pressed_button(self, cbq):
@@ -696,7 +702,7 @@ class AiogramLlmBot:
             chat_id=chat_id,
             text=send_text,
             reply_markup=self.get_initial_keyboard(chat_id, user),
-            parse_mode="HTML",
+            parse_mode=None,
         )
 
     async def on_switch_greeting_button(self, cbq):
@@ -717,7 +723,7 @@ class AiogramLlmBot:
             chat_id=chat_id,
             text=send_text,
             reply_markup=self.get_initial_keyboard(chat_id, user),
-            parse_mode="HTML",
+            parse_mode=None,
         )
 
     # =============================================================================
@@ -733,7 +739,7 @@ class AiogramLlmBot:
                 text=send_text,
                 chat_id=chat_id,
                 message_id=message_id,
-                parse_mode="HTML",
+                parse_mode=None,
             )
             try:
                 tp.generator.load_model(model_file)
@@ -744,7 +750,7 @@ class AiogramLlmBot:
                     chat_id=chat_id,
                     message_id=message_id,
                     text=send_text,
-                    parse_mode="HTML",
+                    parse_mode=None,
                     reply_markup=self.get_options_keyboard(
                         chat_id, self.users[chat_id] if chat_id in self.users else None
                     ),
@@ -755,7 +761,7 @@ class AiogramLlmBot:
                     chat_id=chat_id,
                     message_id=message_id,
                     text="Error during " + model_file + " loading. ⛔",
-                    parse_mode="HTML",
+                    parse_mode=None,
                     reply_markup=self.get_options_keyboard(
                         chat_id, self.users[chat_id] if chat_id in self.users else None
                     ),
@@ -801,7 +807,7 @@ class AiogramLlmBot:
             text=send_text,
             message_id=message_id,
             chat_id=chat_id,
-            parse_mode="HTML",
+            parse_mode=None,
             reply_markup=self.get_options_keyboard(chat_id, user),
         )
 
@@ -848,7 +854,7 @@ class AiogramLlmBot:
         await self.bot.send_message(
             text=send_text,
             chat_id=chat_id,
-            parse_mode="HTML",
+            parse_mode=None,
             reply_markup=self.get_initial_keyboard(chat_id, self.users[chat_id] if chat_id in self.users else None),
         )
 
@@ -891,7 +897,7 @@ class AiogramLlmBot:
             text=send_text,
             message_id=message_id,
             chat_id=chat_id,
-            parse_mode="HTML",
+            parse_mode=None,
             reply_markup=self.get_options_keyboard(chat_id, user),
         )
 
@@ -935,7 +941,7 @@ class AiogramLlmBot:
             text=send_text,
             message_id=message_id,
             chat_id=chat_id,
-            parse_mode="HTML",
+            parse_mode=None,
             reply_markup=self.get_options_keyboard(chat_id, user),
         )
 
