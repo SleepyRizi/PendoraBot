@@ -330,9 +330,9 @@ class AiogramLlmBot:
                 audio_text = text
             audio_path = await self.silero.get_audio(text=audio_text, user_id=chat_id, user=user)
             if audio_path is not None:
-                message = await self.bot.send_audio(
+                message = await self.bot.send_voice(
                     chat_id=chat_id,
-                    audio=InputFile(audio_path),
+                    voice=InputFile(audio_path),
                     caption=text,
                     parse_mode=None,  # Ensure no HTML or Markdown is parsed for the caption
                     reply_markup=self.get_chat_keyboard(chat_id, True),
