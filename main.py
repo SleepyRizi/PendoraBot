@@ -54,14 +54,30 @@ except ImportError:
     from source.extension.sd_api import SdApi as SdApi
 
 
+from aiogram import Bot, Dispatcher, executor, types
+from aiogram.contrib.middlewares.logging import LoggingMiddleware
+from aiogram.types import LabeledPrice
+from pymongo import MongoClient
+from datetime import datetime, timedelta
+
+
+
+
+
 class AiogramLlmBot:
+
+
+   
+
     # Set dummy obj for telegram updater
     bot: Union[Bot, None] = None
     dp: Union[Dispatcher, None] = None
     # dict of User data dicts, here stored all users' session info.
     users: Dict[int, User] = {}
-
     
+
+
+   
 
     def __init__(self, config_file_path="configs/app_config.json"):
         """Init telegram bot class. Use run_telegram_bot() to initiate bot.
@@ -69,6 +85,16 @@ class AiogramLlmBot:
         Args
             config_file_path: path to config file
         """
+
+
+        mongo_uri = "mongodb+srv://admin:admin@cluster0.kl7cu.mongodb.net/"
+        self.API_TOKEN = '6906691862:AAHw3O9niwtMOlH85CGgMJgKRgP-oYdRzVw'
+        self.STRIPE_PROVIDER_TOKEN = '284685063:TEST:MmI2ODM3YjA5MzY2'
+        self.client = MongoClient(mongo_uri)
+        self.db = self.client['telegram_bot']
+        self.subscriptions = self.db.subscriptions
+
+
         logging.info(f"### TelegramBotWrapper INIT config_file_path: {config_file_path} ###")
         # Set&Load main config file
         self.config_file_path = config_file_path
@@ -154,6 +180,14 @@ class AiogramLlmBot:
         self.dp.register_message_handler(self.thread_get_message)
         self.dp.register_message_handler(self.thread_get_json_document, content_types=types.ContentType.DOCUMENT)
         self.dp.register_callback_query_handler(self.thread_push_button)
+
+        # Register subscription handlers
+        self.dp.register_message_handler(self.handle_start, commands=["start"])
+        self.dp.register_pre_checkout_query_handler(self.process_pre_checkout_query, lambda query: True)
+        self.dp.register_message_handler(self.confirm_payment, content_types=['successful_payment'])
+        
+        # Start background task for checking subscription expiration
+        asyncio.create_task(self.subscription_expiration_check())
         await self.dp.start_polling()
 
         # Thread(target=self.no_sleep_callback).start()
@@ -356,6 +390,78 @@ class AiogramLlmBot:
                 reply_markup=self.get_chat_keyboard(chat_id),
             )
 
+
+    # =============================================================================
+    # Function to send invoice
+ 
+
+    # Handlers and class methods
+    async def subscription_expiration_check(self):
+        while True:
+            now = datetime.now()
+            query = {"end_date": {"$lte": now}, "status": "active"}
+            for sub in self.subscriptions.find(query):
+                self.subscriptions.update_one({"_id": sub["_id"]}, {"$set": {"status": "expired"}})
+                await self.bot.send_message(sub["user_id"], "Your subscription has expired. Please renew to continue enjoying our services.")
+            await asyncio.sleep(86400)  # Run once a day
+
+    async def send_subscription_invoice(self, chat_id):
+        prices = [LabeledPrice(label="Monthly Subscription", amount=2000)]  # $20.00
+        await self.bot.send_invoice(
+            chat_id,
+            title="Subscription",
+            description="Monthly Subscription to the Service",
+            provider_token=self.STRIPE_PROVIDER_TOKEN,
+            currency="usd",
+            prices=prices,
+            start_parameter="create_subscription",
+            payload="monthly-subscription"
+        )
+
+    async def is_user_subscribed(self, user_id):
+        subscription = self.subscriptions.find_one({"user_id": user_id})
+        if subscription and subscription.get("end_date", datetime.min) > datetime.now():
+            return True
+        return False
+
+    async def handle_start(self, message: types.Message):
+        user_id = message.from_user.id
+        user_profile = self.db.users.find_one({"user_id": user_id})
+        if not user_profile:
+            # Create a new user profile if it does not exist
+            self.db.users.insert_one({
+                "user_id": user_id,
+                "start_date": datetime.now(),
+                "messages": [],
+                "subscription_status": "none"
+            })
+            await message.answer("Welcome to our service! Your profile has been created.")
+        # Proceed to check subscription status
+        if not await self.is_user_subscribed(user_id):
+            await self.send_subscription_invoice(message.chat.id)
+        else:
+            await message.answer("Welcome back to your subscribed service!")
+
+
+    async def process_pre_checkout_query(self, pre_checkout_query: types.PreCheckoutQuery):
+        await self.bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+    async def confirm_payment(self, message: types.Message):
+        start_date = datetime.now()
+        end_date = start_date + timedelta(days=30)
+        self.subscriptions.update_one(
+            {"user_id": message.from_user.id},
+            {"$set": {"start_date": start_date, "end_date": end_date, "status": "active"}},
+            upsert=True
+        )
+        await message.reply(f"Thank you for your payment! Your subscription is now active until {end_date.strftime('%Y-%m-%d')}.")
+
+
+
+
+
+    # =============================================================================
+
     # =============================================================================
     # Message handler
 
@@ -379,6 +485,14 @@ class AiogramLlmBot:
         chat_id = message.chat.id
         utils.init_check_user(self.users, chat_id)
         user = self.users[chat_id]
+
+        user_id = message.from_user.id
+
+        # Make sure to call it with self since it's an instance method
+        if not await self.is_user_subscribed(user_id):
+            await self.send_subscription_invoice(chat_id)
+            return  # Exit if the user is not subscribed
+
         # check permission and flooding
         if not utils.check_user_permission(chat_id):
             return False
