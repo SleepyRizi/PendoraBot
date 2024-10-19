@@ -119,6 +119,10 @@ class AiogramLlmBot:
 
     
     async def send_random_photo(self, message: types.Message, exclusive: bool = False):
+
+        chat_id = message.chat.id
+        user_id = message.from_user.id
+        
         # Make sure to call it with self since it's an instance method
         if not await self.is_user_subscribed(user_id):
             await self.send_subscription_invoice(chat_id)
