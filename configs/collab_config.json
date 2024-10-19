@@ -1,5 +1,5 @@
 {
-	"bot_mode": "admin",
+	"bot_mode": "persona",
 	"user_name_template": "",
 	"generator_script": "generator_llama_cpp",
 	"model_path": "/content/llm_telegram_bot/models/model_to_load_name",
