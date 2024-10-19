@@ -156,11 +156,5 @@ def get_conversation_info(user: User):
     max_token_param = "truncation_length"
     max_tokens = cfg.generation_params[max_token_param] if max_token_param in cfg.generation_params else "???"
     return (
-        f"{user.name2}\n"
-        f"Conversation length {str(conversation_tokens)}/{max_tokens} tokens.\n"
-        f"(context {(str(context_tokens))}, "
-        f"greeting {(str(greeting_tokens))}, "
-        f"messages {(str(history_tokens))})\n"
-        f"Voice: {user.silero_speaker}\n"
-        f"Language: {user.language}"
+        f"Got it!"
     )
