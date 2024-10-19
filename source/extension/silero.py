@@ -14,7 +14,7 @@ except ImportError:
     import source.utils as utils
     from source.user import User as User
 
-class Silero:
+class MySilero:
     punctuation = r"[\s,.?!/)\'\]>]"
     alphabet_map = {
         "A": " Ei ",
