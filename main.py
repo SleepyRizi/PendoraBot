@@ -28,9 +28,6 @@ import spacy
 nlp = spacy.load("en_core_web_sm")
 
 
-
-
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -41,7 +38,7 @@ try:
     import extensions.telegram_bot.source.buttons as buttons
     from extensions.telegram_bot.source.conf import cfg
     from extensions.telegram_bot.source.user import User as User
-    from extensions.telegram_bot.source.extension.silero import Silero as Silero
+    # from extensions.telegram_bot.source.extension.silero import MySilero as MySilero
     from extensions.telegram_bot.source.extension.sd_api import SdApi as SdApi
 except ImportError:
     import source.text_process as tp
@@ -50,7 +47,7 @@ except ImportError:
     import source.buttons as buttons
     from source.conf import cfg
     from source.user import User as User
-    from source.extension.silero import Silero as Silero
+    from source.extension.silero import MySilero as MySilero
     from source.extension.sd_api import SdApi as SdApi
 
 
@@ -59,8 +56,6 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import LabeledPrice
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-
-
 
 
 
@@ -100,7 +95,7 @@ class AiogramLlmBot:
         self.config_file_path = config_file_path
         cfg.load(self.config_file_path)
         # Silero initiate
-        self.silero = Silero()
+        self.silero = MySilero()
         # SdApi initiate
         self.SdApi = SdApi(cfg.sd_api_url, cfg.sd_config_file_path)
         # Load user rules
@@ -122,16 +117,24 @@ class AiogramLlmBot:
 
     # =============================================================================
 
-
-
+    
     async def send_random_photo(self, message: types.Message):
         text = message.text.strip().lower()
         doc = nlp(text)  # Process the text with spaCy
 
         # Define keywords for each category
         photo_categories = {
-            'boobs': ["boobs", "boobies", "nipples", "fuck me","riding", "ride","suck","tits", "sexy","","cumming", "dick","pusshyy","sucking", "my","breasts", "chest", "knockers", "hooters", "bust"],
-            'pussy': ["pussy", "vagina", "cat","finger", "pussyy", "cat","your", "underware", "face", "sluty", "slut", "whore", "boobs", "pussycat", "pussies", "fingering", "cum", "whole", "ass", "butt", "legs","white pussy"]
+            'boobs': [
+                "boobs", "boobies", "nipples", "tits", "breasts", "chest", "knockers", "hooters", "bust", 
+                "boob", "titties", "nipple", "mammaries", "melons", "rack", "bosom", "bazoombas", "jugs",
+                "busty", "chesty", "norks", "tit", "ta-tas", "bazookas", "boobz", "bewbs", "bobs", "funbags"
+            ],
+            'pussy': [
+                "pussy", "pussies", "vagina", "vag", "cunt", "twat", "slit", "cooch", "coochie", "cooter", 
+                "snatch", "muff", "box", "beaver", "flower", "kitty", "cat", "quim", "fanny", "pussycat", 
+                "poon", "poonani", "puss", "pudenda", "vajayjay", "yoni", "hoo-ha", "private parts", "bits",
+                "ladyparts", "vulva", "genitals", "privates", "down there", "nether regions", "undercarriage"
+            ]
         }
 
         # Determine the folder based on keywords found in text
@@ -146,7 +149,7 @@ class AiogramLlmBot:
             folder_path = os.path.join(base_path, folder_name)
 
             if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                photos = [f for f in os.listdir(folder_path) if f.endswith(('.jpg', '.jpeg', '.png'))]
+                photos = [f for f in os.listdir(folder_path) if f.endswith(tuple(['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG', '.heic', '.HEIC']))]
                 if photos:
                     photo_path = random.choice(photos)
                     full_path = os.path.join(folder_path, photo_path)
@@ -177,6 +180,7 @@ class AiogramLlmBot:
         self.dp = Dispatcher(self.bot)
         self.dp.register_message_handler(self.thread_welcome_message, commands=["start"])
         self.dp.register_message_handler(self.send_random_photo, lambda message: message.text.startswith('📷'))
+        self.dp.register_message_handler(self.send_random_photo)
         self.dp.register_message_handler(self.thread_get_message)
         self.dp.register_message_handler(self.thread_get_json_document, content_types=types.ContentType.DOCUMENT)
         self.dp.register_callback_query_handler(self.thread_push_button)
