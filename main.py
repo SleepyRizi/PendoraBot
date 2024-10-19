@@ -88,8 +88,10 @@ class AiogramLlmBot:
 
 
         mongo_uri = "mongodb+srv://admin:admin@cluster0.kl7cu.mongodb.net/"
-        self.API_TOKEN = '6906691862:AAHw3O9niwtMOlH85CGgMJgKRgP-oYdRzVw'
-        self.STRIPE_PROVIDER_TOKEN = '284685063:TEST:MmI2ODM3YjA5MzY2'
+        self.API_TOKEN = '7212503938:AAEJw4aYyEQCQyjSe44gHX9caB9rmNCk5lw'
+        self.STRIPE_PROVIDER_TOKEN = '350862534:LIVE:YmFhNDM5NThiMzdj'
+        # self.STRIPE_PROVIDER_TOKEN = '284685063:TEST:MmI2ODM3YjA5MzY2'
+
         self.client = MongoClient(mongo_uri)
         self.db = self.client['telegram_bot']
         self.subscriptions = self.db.subscriptions
@@ -130,8 +132,8 @@ class AiogramLlmBot:
 
         # Define keywords for each category
         photo_categories = {
-            'boobs': ["boobs", "boobies", "tits", "breasts", "chest", "knockers", "hooters", "bust"],
-            'pussy': ["pussy", "vagina", "cat", "pussycat", "pussies", "fingering", "cum", "whole", "ass", "butt", "legs","white pussy"]
+            'boobs': ["boobs", "boobies", "nipples", "fuck me","riding", "ride","suck","tits", "sexy","","cumming", "dick","pusshyy","sucking", "my","breasts", "chest", "knockers", "hooters", "bust"],
+            'pussy': ["pussy", "vagina", "cat","finger", "pussyy", "cat","your", "underware", "face", "sluty", "slut", "whore", "boobs", "pussycat", "pussies", "fingering", "cum", "whole", "ass", "butt", "legs","white pussy"]
         }
 
         # Determine the folder based on keywords found in text
