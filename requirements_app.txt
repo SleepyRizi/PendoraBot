@@ -16,3 +16,5 @@ urllib3>=2.0.4
 python-dotenv==1.0.0
 pydantic==1.10.13
 pymongo==4.8.0
+torchaudio==2.5.0
+TTS
