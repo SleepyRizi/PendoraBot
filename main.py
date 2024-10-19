@@ -118,48 +118,53 @@ class AiogramLlmBot:
     # =============================================================================
 
     
-    async def send_random_photo(self, message: types.Message):
+    async def send_random_photo(self, message: types.Message, exclusive: bool = False):
+        # Make sure to call it with self since it's an instance method
+        if not await self.is_user_subscribed(user_id):
+            await self.send_subscription_invoice(chat_id)
+            return  # Exit if the user is not subscribed
+            
         text = message.text.strip().lower()
         doc = nlp(text)  # Process the text with spaCy
-
+    
         # Define keywords for each category
         photo_categories = {
             'boobs': [
-                "boobs", "boobies", "nipples", "tits", "breasts", "chest", "knockers", "hooters", "bust", 
+                "boobs", "boobies", "nipples", "tits", "breasts", "chest", "knockers", "hooters", "bust",
                 "boob", "titties", "nipple", "mammaries", "melons", "rack", "bosom", "bazoombas", "jugs",
                 "busty", "chesty", "norks", "tit", "ta-tas", "bazookas", "boobz", "bewbs", "bobs", "funbags"
             ],
             'pussy': [
-                "pussy", "pussies", "vagina", "vag", "cunt", "twat", "slit", "cooch", "coochie", "cooter", 
-                "snatch", "muff", "box", "beaver", "flower", "kitty", "cat", "quim", "fanny", "pussycat", 
+                "pussy", "pussies", "vagina", "vag", "cunt", "twat", "slit", "cooch", "coochie", "cooter",
+                "snatch", "muff", "box", "beaver", "flower", "kitty", "cat", "quim", "fanny", "pussycat",
                 "poon", "poonani", "puss", "pudenda", "vajayjay", "yoni", "hoo-ha", "private parts", "bits",
                 "ladyparts", "vulva", "genitals", "privates", "down there", "nether regions", "undercarriage"
-            ]
+            ],
         }
-
-        # Determine the folder based on keywords found in text
+    
         folder_name = None
-        for category, keywords in photo_categories.items():
-            if any(word.text in keywords for word in doc):  # Change from word.lemma_ to word.text for direct matching
-                folder_name = category
-                break
-
-        if folder_name:
-            base_path = '/content/llm_telegram_bot/photos'
-            folder_path = os.path.join(base_path, folder_name)
-
-            if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                photos = [f for f in os.listdir(folder_path) if f.endswith(tuple(['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG', '.heic', '.HEIC']))]
-                if photos:
-                    photo_path = random.choice(photos)
-                    full_path = os.path.join(folder_path, photo_path)
-                    await message.reply_photo(photo=InputFile(full_path))
-                else:
-                    await message.reply("No photos available in this folder.")
-            else:
-                await message.reply("Folder not found.")
+        if exclusive:
+            folder_name = random.choice(['boobs', 'pussy'])
         else:
-            await message.reply("I couldn't find any relevant photos based on your request.")
+            # Determine the folder based on keywords found in text
+            for category, keywords in photo_categories.items():
+                if any(word.text in keywords for word in doc):  # Change from word.lemma_ to word.text for direct matching
+                    folder_name = category
+                    break
+    
+        base_path = '/content/llm_telegram_bot/photos'
+        folder_path = os.path.join(base_path, folder_name) if folder_name else None
+    
+        if folder_path and os.path.exists(folder_path) and os.path.isdir(folder_path):
+            photos = [f for f in os.listdir(folder_path) if f.endswith(tuple(['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG', '.heic', '.HEIC']))]
+            if photos:
+                photo_path = random.choice(photos)
+                full_path = os.path.join(folder_path, photo_path)
+                await message.reply_photo(photo=InputFile(full_path))
+            else:
+                await message.reply("Actually, I don't have right now.")
+        else:
+            await message.reply("Actually, I don't have right now.")
 
 
     # Run bot with token! Initiate updater obj!
@@ -179,7 +184,8 @@ class AiogramLlmBot:
         self.bot = Bot(token=bot_token, proxy=proxy_url)
         self.dp = Dispatcher(self.bot)
         self.dp.register_message_handler(self.thread_welcome_message, commands=["start"])
-        self.dp.register_message_handler(self.send_random_photo, lambda message: message.text.startswith('📷'))
+        self.dp.register_message_handler(lambda message: self.send_random_photo(message, exclusive=False), lambda message: message.text.startswith('📷'))
+        self.dp.register_message_handler(lambda message: self.send_random_photo(message, exclusive=True), lambda message: message.text.startswith('/exclusive'))
         # self.dp.register_message_handler(self.send_random_photo)
         self.dp.register_message_handler(self.thread_get_message)
         self.dp.register_message_handler(self.thread_get_json_document, content_types=types.ContentType.DOCUMENT)
