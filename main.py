@@ -38,7 +38,7 @@ try:
     import extensions.telegram_bot.source.buttons as buttons
     from extensions.telegram_bot.source.conf import cfg
     from extensions.telegram_bot.source.user import User as User
-    # from extensions.telegram_bot.source.extension.silero import MySilero as MySilero
+    from extensions.telegram_bot.source.extension.silero import Silero as Silero
     from extensions.telegram_bot.source.extension.sd_api import SdApi as SdApi
 except ImportError:
     import source.text_process as tp
@@ -47,7 +47,7 @@ except ImportError:
     import source.buttons as buttons
     from source.conf import cfg
     from source.user import User as User
-    from source.extension.silero import MySilero as MySilero
+    from source.extension.silero import Silero as Silero
     from source.extension.sd_api import SdApi as SdApi
 
 
@@ -95,7 +95,7 @@ class AiogramLlmBot:
         self.config_file_path = config_file_path
         cfg.load(self.config_file_path)
         # Silero initiate
-        self.silero = MySilero()
+        self.silero = Silero()
         # SdApi initiate
         self.SdApi = SdApi(cfg.sd_api_url, cfg.sd_config_file_path)
         # Load user rules
