@@ -88,10 +88,8 @@ class AiogramLlmBot:
 
 
         mongo_uri = "mongodb+srv://admin:admin@cluster0.kl7cu.mongodb.net/"
-        self.API_TOKEN = '7212503938:AAEJw4aYyEQCQyjSe44gHX9caB9rmNCk5lw'
-        self.STRIPE_PROVIDER_TOKEN = '350862534:LIVE:YmFhNDM5NThiMzdj'
-        # self.STRIPE_PROVIDER_TOKEN = '284685063:TEST:MmI2ODM3YjA5MzY2'
-
+        self.API_TOKEN = '6906691862:AAHw3O9niwtMOlH85CGgMJgKRgP-oYdRzVw'
+        self.STRIPE_PROVIDER_TOKEN = '284685063:TEST:MmI2ODM3YjA5MzY2'
         self.client = MongoClient(mongo_uri)
         self.db = self.client['telegram_bot']
         self.subscriptions = self.db.subscriptions
@@ -415,6 +413,7 @@ class AiogramLlmBot:
             description="Monthly Subscription to the Service",
             provider_token=self.STRIPE_PROVIDER_TOKEN,
             currency="usd",
+            photo_url="https://i.ibb.co/S69RQ3F/payment.jpg",  # HTTPS URL to an image
             prices=prices,
             start_parameter="create_subscription",
             payload="monthly-subscription"
@@ -478,7 +477,7 @@ class AiogramLlmBot:
             text=send_text,
             reply_to_message_id=None,
             reply_markup=self.get_initial_keyboard(chat_id, self.users[chat_id] if chat_id in self.users else None),
-            parse_mode=None,
+            parse_mode='HTML',
         )
 
     async def thread_get_message(self, message: types.Message):
