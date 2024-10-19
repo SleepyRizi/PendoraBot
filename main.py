@@ -180,7 +180,7 @@ class AiogramLlmBot:
         self.dp = Dispatcher(self.bot)
         self.dp.register_message_handler(self.thread_welcome_message, commands=["start"])
         self.dp.register_message_handler(self.send_random_photo, lambda message: message.text.startswith('📷'))
-        self.dp.register_message_handler(self.send_random_photo)
+        # self.dp.register_message_handler(self.send_random_photo)
         self.dp.register_message_handler(self.thread_get_message)
         self.dp.register_message_handler(self.thread_get_json_document, content_types=types.ContentType.DOCUMENT)
         self.dp.register_callback_query_handler(self.thread_push_button)
